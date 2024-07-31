@@ -5,6 +5,4 @@ public enum DeliveryMethod {
     DELIVERY,
     DELIVERY_TODAY,
     DELIVERY_ASAP
-
-
 }

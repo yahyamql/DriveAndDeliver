@@ -8,47 +8,49 @@ import com.carrefour.kata.exceptions.CustomException;
 import com.carrefour.kata.repositories.CustomerRepository;
 import com.carrefour.kata.repositories.DeliveryRepository;
 import com.carrefour.kata.services.DeliveryService;
+import io.r2dbc.spi.R2dbcDataIntegrityViolationException;
 import lombok.AllArgsConstructor;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @AllArgsConstructor
 @Service
 public class DeliveryServiceImpl implements DeliveryService {
+
     private final DeliveryRepository deliveryRepository;
     private final CustomerRepository customerRepository;
 
     @Override
-    public List<Delivery> getAvailableTimeSlots(DeliveryMethod deliveryMethod) {
-        return deliveryRepository.findByDeliveryMethod(deliveryMethod);
+    public Mono<Void> createDelivery(DeliveryDto deliveryDto) {
+        return customerRepository.findById(deliveryDto.getIdCustomer())
+                .switchIfEmpty(Mono.error(new CustomException("Customer not found")))
+                .flatMap(customer -> {
+                    Delivery delivery = new Delivery();
+                    delivery.setId(deliveryDto.getId());
+                    delivery.setDeliveryMethod(deliveryDto.getDeliveryMethod().toString());
+                    delivery.setDeliveryDateTime(deliveryDto.getDeliveryDateTime());
+                    delivery.setCustomerId(customer.getId());
+                    return deliveryRepository.save(delivery).then();
+                })
+                .onErrorMap(DuplicateKeyException.class, ex ->
+                        new CustomException("Delivery id already exists : " + deliveryDto.getId()));
     }
 
     @Override
-    public void createDelivery(DeliveryDto deliveryDto) throws CustomException {
-//        Delivery delivery = deliveryRepository.findById(timeSlotId)
-//                .orElseThrow(() -> new CustomException("TimeSlot not found"));
-
-        Customer customer = customerRepository.findById(deliveryDto.getIdCustomer())
-                .orElseThrow(() -> new CustomException("Customer not found"));
-
-        Delivery delivery = new Delivery();
-        delivery.setDeliveryMethod(deliveryDto.getDeliveryMethod());
-        delivery.setDeliveryDateTime(deliveryDto.getDeliveryDateTime());
-        delivery.setCustomer(customer);
-        customer.getDeliveries().add(delivery);
-
-        customerRepository.save(customer);
-    }
-
-    @Override
-    public List<Customer> getAllCustomers() {
+    public Flux<Customer> getAllCustomers() {
         return customerRepository.findAll();
     }
 
     @Override
-    public Customer getCustomerById(long idCustomer) {
+    public Mono<Customer> getCustomerById(long idCustomer) {
         return customerRepository.findById(idCustomer)
-                .orElseThrow(() -> new CustomException("Customer not found !"));
+                .switchIfEmpty(Mono.error(new CustomException("Customer not found !")))
+                .flatMap(customer ->
+                    deliveryRepository.findByCustomerId(idCustomer)
+                        .collectList()
+                        .doOnNext(customer::setDeliveries)
+                        .thenReturn(customer));
     }
 }

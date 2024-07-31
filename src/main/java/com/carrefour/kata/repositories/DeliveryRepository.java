@@ -2,11 +2,13 @@ package com.carrefour.kata.repositories;
 
 import com.carrefour.kata.entities.Delivery;
 import com.carrefour.kata.enums.DeliveryMethod;
-import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.repository.reactive.ReactiveCrudRepository;
+import org.springframework.stereotype.Repository;
+import reactor.core.publisher.Flux;
 
-import java.util.List;
+public interface DeliveryRepository extends ReactiveCrudRepository<Delivery, Long> {
 
-public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
+    Flux<Delivery> findByDeliveryMethod(DeliveryMethod deliveryMethod);
 
-    List<Delivery> findByDeliveryMethod(DeliveryMethod deliveryMethod);
+    Flux<Delivery> findByCustomerId(Long customerId);
 }

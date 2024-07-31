@@ -5,16 +5,17 @@ import com.carrefour.kata.entities.Customer;
 import com.carrefour.kata.entities.Delivery;
 import com.carrefour.kata.enums.DeliveryMethod;
 import com.carrefour.kata.exceptions.CustomException;
-
-import java.util.List;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public interface DeliveryService {
-    List<Delivery> getAvailableTimeSlots(DeliveryMethod deliveryMethod);
-    void createDelivery(DeliveryDto deliveryDto) throws CustomException;
+//    Flux<Delivery> getAvailableTimeSlots(DeliveryMethod deliveryMethod);
 
-    List<Customer> getAllCustomers();
+    Mono<Void> createDelivery(DeliveryDto deliveryDto) throws CustomException;
 
-    Customer getCustomerById(long id);
+    Flux<Customer> getAllCustomers();
+
+    Mono<Customer> getCustomerById(long id);
 
 
 }

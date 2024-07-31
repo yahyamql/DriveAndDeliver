@@ -6,24 +6,26 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
+import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
+import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.server.SecurityWebFilterChain;
 
+import static org.springframework.security.config.Customizer.withDefaults;
+
+
+@EnableWebFluxSecurity
 @Configuration
 public class SecurityConfig {
-
     @Bean
-    public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
-        http.authorizeHttpRequests((requests) -> requests
-                .requestMatchers("/h2/**").permitAll()
-                .anyRequest().authenticated()
-        );
-        http.formLogin(Customizer.withDefaults());
-        http.httpBasic(Customizer.withDefaults());
-        http.csrf(AbstractHttpConfigurer::disable);
-        http.headers(h -> h.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable));
-        return http.build();
+    public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
+        return http
+                .authorizeExchange((exchanges ->
+                        exchanges.pathMatchers("/h2/**").permitAll()
+                        .anyExchange().authenticated()))
+                .httpBasic(withDefaults())
+                .csrf(ServerHttpSecurity.CsrfSpec::disable)
+                .formLogin(withDefaults())
+                .build();
     }
-
-
-
 }

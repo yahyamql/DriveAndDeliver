@@ -1,27 +1,34 @@
 package com.carrefour.kata.entities;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import jakarta.persistence.*;
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
-import org.springframework.util.CollectionUtils;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import lombok.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Transient;
+import org.springframework.data.domain.Persistable;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
+
+import org.springframework.data.relational.core.mapping.Table;
 
 @Setter
 @Getter
-@Entity
-public class Customer {
+@ToString
+@Table
+public class Customer implements Persistable<Long> {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     private String name;
 
-    @OneToMany(mappedBy = "customer" , cascade = CascadeType.ALL)
-    @JsonManagedReference
-    private Set<Delivery> deliveries;
+    @Transient
+    private List<Delivery> deliveries;
+
+    @Transient
+    @JsonIgnore
+    private boolean isNew = true;
+
+    @Override
+    public boolean isNew() {
+        return isNew;
+    }
 }
