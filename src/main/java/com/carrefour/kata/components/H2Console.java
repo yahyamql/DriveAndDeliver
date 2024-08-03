@@ -7,7 +7,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 /**
- * Class Helper to show the console admin H2 on port 8082 on reactive context
+ * Class Helper to show the console admin H2 on port 8082 in reactive context
  */
 @Component
 public class H2Console {
